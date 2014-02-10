@@ -5,9 +5,11 @@
         nCols = 10,
         blockWidth = 20,
         blockHeight = 20,
-        canvas = document.getElementById('game'),
-        renderer = new App.Renderer(canvas, nRows, nCols, blockWidth, blockHeight),
-        game = new App.Game(nRows, nCols, renderer),
+        mainCanvas = document.getElementById('game'),
+        nextFigureCanvas = document.getElementById('nextFigure'),
+        renderer = new App.Renderer(mainCanvas, nRows, nCols, blockWidth, blockHeight),
+        toolsRenderer = new App.Renderer(nextFigureCanvas, 4, 4, blockWidth, blockHeight),
+        game = new App.Game(nRows, nCols, renderer, toolsRenderer),
         inputProcessor = new App.InputProcessor(game);
 
     document.onkeydown = function(e) {

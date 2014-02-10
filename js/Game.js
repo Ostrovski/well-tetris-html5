@@ -1,15 +1,16 @@
 (function(App) {
-    App.Game = function(nRows, nCols, renderer) {
+    App.Game = function(nRows, nCols, renderer, toolsRenderer) {
         this._nRows = nRows;
         this._nCols = nCols;
         this._blocksStorage = new App.BlocksStorage(this._nCols);
         this._renderer = renderer;
+        this._toolsRenderer = toolsRenderer;
         this._tickSize = 500;
     };
 
     App.Game.prototype.init = function() {
         this._blocksStorage = new App.BlocksStorage(this._nCols);
-        this._figure = App.Figure.nextRand();
+        this._generateNextFigure();
     };
 
     App.Game.prototype.start = function() {
@@ -54,7 +55,7 @@
 
     App.Game.prototype.rotateFigure = function() {
         if (this._figure) {
-            this._figure.rotate(this._blocksStorage);
+            this._figure.rotate(this._blocksStorage, 0, this._nCols - 1, this._nRows - 1);
         }
     };
 
@@ -77,7 +78,7 @@
             if (this._detectCollisions()) {
                 this._transformFigureToBlocks();
                 this._tryBurnLines();
-                this._figure = App.Figure.nextRand();
+                this._generateNextFigure();
             } else {
                 this._tryMoveFigureDown();
             }
@@ -110,11 +111,24 @@
         if (!this._figure.moveDown(this._blocksStorage, this._nRows - 1)) {
             this._transformFigureToBlocks();
             this._tryBurnLines();
-            this._figure = App.Figure.nextRand();
+            this._generateNextFigure();
         }
     };
 
     App.Game.prototype._tryBurnLines = function() {
         console.log(this._blocksStorage.burnCompletedLines());
+    };
+
+    App.Game.prototype._generateNextFigure = function() {
+        this._nextFigure = this._nextFigure || App.Figure.nextRand();
+        this._figure = this._nextFigure;
+        this._figure.moveRight(this._blocksStorage, this._nCols - 1);
+        this._figure.moveRight(this._blocksStorage, this._nCols - 1);
+        this._figure.moveRight(this._blocksStorage, this._nCols - 1);
+
+        this._nextFigure = App.Figure.nextRand();
+
+        this._toolsRenderer.clearScreen();
+        this._nextFigure.render(this._toolsRenderer);
     };
 })(TetrisApp);

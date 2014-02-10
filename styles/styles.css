@@ -1,5 +1,12 @@
 #game {
     border: 1px solid #000000;
+    float: left;
+}
+
+#nextFigure {
+    border: 1px solid blue;
+    float: left;
+    margin-left: 10px;
 }
 
 #block-img {

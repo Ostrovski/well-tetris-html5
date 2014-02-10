@@ -19,6 +19,8 @@
     };
 
     App.BlocksStorage.prototype.detectCollisions = function(figure) {
+        // todo: можно оптимизировать, сократив число проверкок,
+        // если знать, на каких строках расположена фигура
         var aLine;
         for (var k in this._blocks) {
             if (this._blocks.hasOwnProperty(k)) {

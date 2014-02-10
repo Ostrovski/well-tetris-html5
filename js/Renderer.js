@@ -17,7 +17,7 @@
 
     App.Renderer.prototype.renderBlocks = function (aBlocks) {
         for (var i = 0, l = aBlocks.length; i < l; i++) {
-            this._renderBlock(aBlocks[i])
+            this._renderBlock(aBlocks[i]);
         }
     };
 

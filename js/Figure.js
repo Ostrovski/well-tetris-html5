@@ -54,10 +54,19 @@
         ];
 
         for (var i = 90; i <= degree; i += 90) {
-            blocks = _rotateI(blocks, i);
+            _rotateI(blocks, i);
         }
 
         return blocks;
+    }
+
+    function _makeBlocksO(x, y) {
+        return [
+            {x: x, y: y},
+            {x: x + 1, y: y},
+            {x: x, y: y + 1},
+            {x: x + 1, y: y + 1}
+        ];
     }
 
     App.Figure = function(type, blocks, degree) {
@@ -79,6 +88,7 @@
             case App.Figure.TYPE_J:
                 break;
             case App.Figure.TYPE_O:
+                blocks = _makeBlocksO(x, y);
                 break;
             case App.Figure.TYPE_S:
                 break;
@@ -94,7 +104,11 @@
     };
 
     App.Figure.nextRand = function() {
-        return App.Figure.create(App.Figure.TYPE_I, 4, 0, 0);
+        var implementedFigures = [App.Figure.TYPE_I, App.Figure.TYPE_O];
+        return App.Figure.create(
+            implementedFigures[Math.floor(Math.random() * implementedFigures.length)],
+            1, 0, 90 * Math.floor(Math.random() * 4)
+        );
     };
 
     App.Figure.prototype.isAtFloor = function(bottomBorder) {
@@ -122,13 +136,12 @@
 
         for (var i = 0, l = this._blocks.length; i < l; i++) {
             this._blocks[i].y++;
-            if (this._blocks[i].y > bottomBorder) {
-                this._restoreState();
-                return false;
-            }
         }
 
-        return this._acceptStateIfNoCollisions(blocksStorage);
+        return this._acceptStateIfNoCollisions(
+            blocksStorage,
+            {bottomBorder: bottomBorder}
+        );
     };
 
     App.Figure.prototype.moveLeft = function(blocksStorage, leftBorder) {
@@ -136,13 +149,12 @@
 
         for (var i = 0, l = this._blocks.length; i < l; i++) {
             this._blocks[i].x--;
-            if (this._blocks[i].x < leftBorder) {
-                this._restoreState();
-                return false;
-            }
         }
 
-        return this._acceptStateIfNoCollisions(blocksStorage);
+        return this._acceptStateIfNoCollisions(
+            blocksStorage,
+            {leftBorder: leftBorder}
+        );
     };
 
     App.Figure.prototype.moveRight = function(blocksStorage, rightBorder) {
@@ -150,19 +162,29 @@
 
         for (var i = 0, l = this._blocks.length; i < l; i++) {
             this._blocks[i].x++;
-            if (this._blocks[i].x > rightBorder) {
-                this._restoreState();
-                return false;
-            }
         }
 
-        return this._acceptStateIfNoCollisions(blocksStorage);
+        return this._acceptStateIfNoCollisions(
+            blocksStorage,
+            {rightBorder: rightBorder}
+        );
     };
 
-    App.Figure.prototype.rotate = function() {
+    App.Figure.prototype.rotate = function(blocksStorage, leftBorder, rightBorder, bottomBorder) {
+        if (!this._rotate) {
+            return true;
+        }
+
+        this._saveState();
+
         var degree = (this._degree + 90) % 360;
         this._rotate(this._blocks, degree);
         this._degree = degree;
+
+        return this._acceptStateIfNoCollisions(
+            blocksStorage,
+            {leftBorder: leftBorder, rightBorder: rightBorder, bottomBorder: bottomBorder}
+        );
     };
 
     App.Figure.prototype.render = function(renderer) {
@@ -178,18 +200,48 @@
     App.Figure.prototype._restoreState = function() {
         if (this._savedState) {
             this._blocks = this._savedState.blocks;
+            this._degree = this._savedState.degree;
         }
     };
 
     App.Figure.prototype._saveState = function() {
-        this._savedState = {blocks: []};
+        this._savedState = {blocks: [], degree: this._degree};
 
         for (var i = 0, l = this._blocks.length; i < l; i++) {
             this._savedState.blocks.push({x: this._blocks[i].x, y: this._blocks[i].y});
         }
     };
 
-    App.Figure.prototype._acceptStateIfNoCollisions = function(blocksStorage) {
+    App.Figure.prototype._acceptStateIfNoCollisions = function(blocksStorage, borders) {
+        var i, l;
+
+        if (borders.hasOwnProperty('leftBorder')) {
+            for (i = 0, l = this._blocks.length; i < l; i++) {
+                if (this._blocks[i].x < borders.leftBorder) {
+                    this._restoreState();
+                    return false;
+                }
+            }
+        }
+
+        if (borders.hasOwnProperty('rightBorder')) {
+            for (i = 0, l = this._blocks.length; i < l; i++) {
+                if (this._blocks[i].x > borders.rightBorder) {
+                    this._restoreState();
+                    return false;
+                }
+            }
+        }
+
+        if (borders.hasOwnProperty('bottomBorder')) {
+            for (i = 0, l = this._blocks.length; i < l; i++) {
+                if (this._blocks[i].y > borders.bottomBorder) {
+                    this._restoreState();
+                    return false;
+                }
+            }
+        }
+
         if (blocksStorage.detectCollisions(this)) {
             this._restoreState();
             return false;
